@@ -2,10 +2,11 @@
   "name": "chess-actions",
   "version": "1.0.0",
   "main": "main.js",
+  "types": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm install && tsc -b",
-    "dev": "tsc -b && node dist/main.js"
+    "dev": "tsc -b && node dist/index.js"
   },
   "keywords": [],
   "author": "",
@@ -16,8 +17,11 @@
     "@types/node": "^22.10.2"
   },
   "dependencies": {
+    "@chrisoakman/chessboardjs": "^1.0.0",
     "@octokit/rest": "^21.0.2",
+    "canvas": "^2.11.2",
     "chess.js": "^1.0.0-beta.8",
+    "dotenv": "^16.4.7",
     "js-yaml": "^4.1.0"
   }
 }

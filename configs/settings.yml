@@ -1,0 +1,49 @@
+comments:
+  # Welcome to the Chess Master Bot's settings file! 🎉
+  # Adjust these comments if you dare... but remember, the bot has feelings too! 🤖💔
+
+  invalid_new_game: |
+    Oops, {author}! Only the Chess Master (repo owner) can start a new game. 🤷‍♂️  
+    Maybe challenge them to a duel in real life instead? 🎯🏆
+
+  successful_new_game: |
+    🎉 The chessboard is set, and the pieces are ready to dance! 💃🕺  
+    It's White's move first... as tradition dictates. May the best player win! ♟️
+
+  invalid_move_syntax: |
+    Hmm... that doesn't seem right. 🤔  
+    Try something like `Chess: Move e2 to e4`. Don't make me flip the board! 😠♻️
+
+  invalid_fen: |
+    Uh-oh, the board state looks a bit... broken. 🛠️  
+    I tried loading the FEN: `{previousFen}`, but it was like deciphering hieroglyphs! 🔎  
+    Can someone fix this mess? 😅
+
+  invalid_move: |
+    {src} to {dest}? Really? 😑 That's not a valid move!  
+    Are you trying to invent a new chess rule or what? 😂 Try again.
+
+  successful_move: |
+    🏌️‍♂️ Move successful! {src} to {dest}. 👌  
+    Next up: {nextTurn}'s turn. Time to show who's boss! 💪♜
+
+  checkmate: |
+    🔥🔥🔥 BOOM! Checkmate! {winner} emerges victorious! 👑  
+    The opponent has been schooled in the art of chess-fu. 🎓♟️  
+    GG WP! Ready for a rematch? 🥊
+
+  draw: |
+    😐 It's a draw. No winners, no losers... just two evenly matched masterminds.  
+    Or maybe it was just dumb luck? 🤷 Let's go again and find out! ⚔️
+
+  invalid_action: |
+    🛑 HALT! That action isn't part of the chess manual. 📖  
+    Either you're trying to hack the system or just experimenting... 🕵️‍♀️  
+    Stick to the plan, and let's play chess! ♟️
+
+  new_game: |
+    🎲 The battle for the chess throne begins now! 👑  
+    Time to summon the Chess Master (repo owner) and kickstart this epic duel. 🤺  
+    No pressure, but the fate of the kingdom rests on this game! ⚔️🛡️
+
+# Reminder: Messing with these comments might result in unexpected hilarity. Proceed with caution! 😜

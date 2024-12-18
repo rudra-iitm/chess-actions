@@ -1,9 +1,25 @@
 name: Play Chess
-description: 'A GitHub Action to automate playing chess, updating move statistics, and interacting with repositories.'
+description: 'Automate playing chess and updating move statistics in github issues.'
+
+inputs:
+  issue_number:
+    description: 'The GitHub issue number where the chess move is recorded.'
+    required: true
+  repository_owner:
+    description: 'Owner of the GitHub repository.'
+    required: false
+    default: ${{ github.repository_owner }}
+  repository_name:
+    description: 'Name of the GitHub repository.'
+    required: false
+    default: ${{ github.repository }}
+
+outputs:
+  move_result:
+    description: 'The result of the processed chess move.'
 
 runs:
   using: "composite"
-
   steps:
     - name: Checkout chess-actions repository
       uses: actions/checkout@v3
@@ -20,10 +36,10 @@ runs:
     - name: Cache dependencies
       uses: actions/cache@v3
       with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-
+        path: ~/.npm
+        key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.OS }}-node-
 
     - name: Install dependencies
       run: npm ci
@@ -34,22 +50,7 @@ runs:
     - name: Process chess move
       run: node dist/index.js
       env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-
-    - name: Update README
-      run: node dist/update-readme.js
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Commit and push changes
-      env:
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
-      run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add README.md
-          git commit -m "${ISSUE_TITLE} by ${ISSUE_AUTHOR}"
-          git push
-
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ISSUE_NUMBER: ${{ inputs.issue_number }}
+        GITHUB_REPOSITORY_OWNER: ${{ inputs.repository_owner }}
+        GITHUB_REPOSITORY: ${{ inputs.repository_name }}
