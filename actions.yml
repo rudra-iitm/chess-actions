@@ -1,0 +1,55 @@
+name: Play Chess
+description: 'A GitHub Action to automate playing chess, updating move statistics, and interacting with repositories.'
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Checkout chess-actions repository
+      uses: actions/checkout@v3
+      with:
+        repository: 'rudra-iitm/chess-actions'
+        ref: main
+        path: chess-actions
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build TypeScript
+      run: npm run build
+
+    - name: Process chess move
+      run: node dist/index.js
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+
+    - name: Update README
+      run: node dist/update-readme.js
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Commit and push changes
+      env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+      run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git commit -m "${ISSUE_TITLE} by ${ISSUE_AUTHOR}"
+          git push
+
