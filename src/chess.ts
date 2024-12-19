@@ -61,7 +61,7 @@ export const handleMoveAction = async (octokit: Octokit, comment: any, move: { f
     }
 
     const currentFen = chess.fen();
-    const nextTurn = chess.turn() === 'w' ? 'White' : 'Black';
+    const nextTurn = chess.turn() === 'w' ? `White (@${gameState.players.white})` : `Black (@${gameState.players.black})`;
     const imageUri = await createVisualFen(issue, currentFen, commentId);
 
     if (chess.isCheckmate() || chess.isDraw()) {
@@ -145,7 +145,7 @@ export const handleNewGameAction = async (octokit: Octokit, issue: any, { commen
         owner,
         repo,
         issue_number: issueNumber,
-        body: successful_new_game_comment,
+        body: successful_new_game_comment.replace('{author}', issue.user?.login),
     });
 
     await octokit.rest.issues.addAssignees({
