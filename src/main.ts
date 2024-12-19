@@ -230,9 +230,7 @@ const handleMoveAction = async (octokit: Octokit, commentId: Number, move: { fro
         });
 
         saveGameState(issue.number, { previousFen: chess.fen(), processedComments: gameState.processedComments });
-        const updatedState = loadGameState(issue.number);
-        console.log("Updated GameState:", updatedState);
-        return;
+        return chess.fen();
     }
 
     const currentFen = chess.fen();
@@ -258,13 +256,11 @@ const handleMoveAction = async (octokit: Octokit, commentId: Number, move: { fro
         body: comments.successful_move
             .replace('{src}', move.from.toUpperCase())
             .replace('{dest}', move.to.toUpperCase())
-            .replace('{nextTurn}', nextTurn) +
-            `\n\nCurrent board state:\n\n![Chess Board](${imageUri})`,
+            .replace('{nextTurn}', nextTurn)
     });
 
     saveGameState(issue.number, { previousFen: currentFen, processedComments: gameState.processedComments });
-    const updatedState = loadGameState(issue.number);
-    console.log("Updated GameState:", updatedState);
+    return chess.fen();
 };
 
 const handleNewGameAction = async (octokit: Octokit, issue: any, {comments}: any) => {
@@ -310,15 +306,23 @@ const processComments = async (octokit: Octokit, issue: any) => {
     for (const comment of comments) {
         if (gameState.processedComments.includes(comment.id)) continue;
 
+        if (comment.user?.login === 'github-actions[bot]') {
+            gameState.processedComments.push(comment.id);
+            continue;
+        }
+
+        console.log('Processing comment:', comment.id);
+
         const { action, move } = parseComment(comment);
         if (action === Actions.Move && move) {
-            await handleMoveAction(octokit, comment.id, move, issue, commentsConfig, gameState);
+            gameState.previousFen = await handleMoveAction(octokit, comment.id, move, issue, commentsConfig, gameState) || gameState.previousFen;
         }
 
         gameState.processedComments.push(comment.id);
     }
 
     saveGameState(issue.number, gameState);
+    return gameState.previousFen;
 };
 
 const main = async (octokit: Octokit, issue: any) => {
