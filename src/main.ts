@@ -213,11 +213,12 @@ const handleMoveAction = async (octokit: Octokit, commentId: Number, move: { fro
         console.log('Moving Piece:', move);
     } catch (error) {
         const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
+        const invalid_move_comment = comments.invalid_move[Math.floor(Math.random() * comments.invalid_move.length)];
         await octokit.rest.issues.createComment({
             owner,
             repo,
             issue_number: issueNumber,
-            body: comments.invalid_move.replace('{src}', move.from.toUpperCase()).replace('{dest}', move.to.toUpperCase()),
+            body: invalid_move_comment.replace('{src}', move.from.toUpperCase()).replace('{dest}', move.to.toUpperCase()),
         });
         return;
     }
@@ -244,22 +245,24 @@ const handleMoveAction = async (octokit: Octokit, commentId: Number, move: { fro
     const imageUri = await createVisualFen(issue, currentFen, commentId);
 
     const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
+    const next_move_comment = comments.next_move[Math.floor(Math.random() * comments.next_move.length)];
     await octokit.rest.issues.update({
         owner,
         repo,
         issue_number: issueNumber,
-        body: comments.next_move
+        body: next_move_comment
             .replace('{src}', move.from.toUpperCase())
             .replace('{dest}', move.to.toUpperCase())
             .replace('{nextTurn}', nextTurn) +
             `\n\nCurrent board state:\n\n![Chess Board](${imageUri})`,
     });
 
+    const successful_move_comment = comments.successful_move[Math.floor(Math.random() * comments.successful_move.length)];
     await octokit.rest.issues.createComment({
         owner,
         repo,
         issue_number: issueNumber,
-        body: comments.successful_move
+        body: successful_move_comment
             .replace('{src}', move.from.toUpperCase())
             .replace('{dest}', move.to.toUpperCase())
             .replace('{nextTurn}', nextTurn)
@@ -280,18 +283,21 @@ const handleNewGameAction = async (octokit: Octokit, issue: any, {comments}: any
     const imageUri = await createVisualFen(issue, initialFen, 'init');
 
     const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
+    const new_game_comment = comments.new_game[Math.floor(Math.random() * comments.new_game.length)];
     await octokit.rest.issues.update({
         owner,
         repo,
         issue_number: issueNumber,
-        body: comments.new_game + `\n\nInitial board state:\n\n![Chess Board](${imageUri})`,
+        body: new_game_comment + `\n\nInitial board state:\n\n![Chess Board](${imageUri})`,
     });
 
+
+    const successful_new_game_comment = comments.successful_new_game[Math.floor(Math.random() * comments.successful_new_game.length)];
     await octokit.rest.issues.createComment({
         owner,
         repo,
         issue_number: issueNumber,
-        body: comments.successful_new_game,
+        body: successful_new_game_comment,
     });
 
 
