@@ -95,6 +95,8 @@ export const handleMoveAction = async (octokit: Octokit, comment: any, move: { f
             .replace('{nextTurn}', nextTurn) +
             `\n\nCurrent board state:\n\n![Chess Board](${imageUri})`,
     });
+    gameState.previousFen = currentFen;
+    gameState.moves.push({ from: move.from, to: move.to, playedBy: comment.user?.login, promotion: move.promotion });
 
     const successful_move_comment = comments.successful_moves[Math.floor(Math.random() * comments.successful_moves.length)];
 
@@ -118,8 +120,6 @@ export const handleMoveAction = async (octokit: Octokit, comment: any, move: { f
         comment_id: commentId,
     });
 
-    gameState.previousFen = currentFen;
-    gameState.moves.push({ from: move.from, to: move.to, playedBy: comment.user?.login, promotion: move.promotion });
     return gameState;
 };
 
