@@ -107,7 +107,7 @@ export const handleMoveAction = async (octokit: Octokit, comment: any, move: { f
     const successful_move_comment = comments.successful_moves[Math.floor(Math.random() * comments.successful_moves.length)];
 
     const previousMoves = gameState.moves
-    .map(m => `- **${m.playedBy}**: ${m.from.toUpperCase()} → ${m.to.toUpperCase()}`)
+    .map(m => `- ${m.playedBy == gameState.players.white ? '**White**' : '**Black**'} (@${m.playedBy}): ${m.from.toUpperCase()} → ${m.to.toUpperCase()}`)
     .join('\n');
 
     const body = `
