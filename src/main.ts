@@ -4,7 +4,7 @@ import { handleMoveAction, handleNewGameAction } from './chess.js';
 
 const processComments = async (octokit: Octokit, issue: any) => {
     const commentsConfig = loadCommentsConfig();
-    const gameState = loadGameState(issue.number);
+    let gameState = loadGameState(issue.number);
 
     const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
     const { data: comments } = await octokit.rest.issues.listComments({
@@ -20,7 +20,7 @@ const processComments = async (octokit: Octokit, issue: any) => {
 
         const { action, move } = parseComment(comment);
         if (action === Actions.Move && move) {
-            gameState.previousFen = await handleMoveAction(octokit, comment.id, move, issue, commentsConfig, gameState) || gameState.previousFen;
+            gameState = await handleMoveAction(octokit, comment, move, issue, commentsConfig, gameState) || gameState.previousFen;
         }
 
         gameState.processedComments.push(comment.id);

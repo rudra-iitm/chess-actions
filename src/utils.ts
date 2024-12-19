@@ -9,6 +9,14 @@ export enum Actions {
     Invalid = 'invalid',
 }
 
+export interface GameState {
+    previousFen: string,
+    mainThread: number,
+    processedComments: number[],
+    moves: { from: Square, to: Square, playedBy: string, promotion?: string  }[],
+    players: { white: string, black: string },
+}
+
 const CONFIG_FILE = 'configs/settings.yml';
 
 export const getIssueDirectory = (issueNumber: number): string => {
@@ -23,15 +31,15 @@ export const loadCommentsConfig = (): { [key: string]: string } => {
     return yaml.load(fs.readFileSync(CONFIG_FILE, 'utf8')) as any;
 };
 
-export const loadGameState = (issueNumber: number): { previousFen: string; processedComments: number[] } => {
+export const loadGameState = (issueNumber: number): GameState => {
     const stateFile = path.join(getIssueDirectory(issueNumber), 'game-state.yml');
     if (fs.existsSync(stateFile)) {
         return yaml.load(fs.readFileSync(stateFile, 'utf8')) as any;
     }
-    return { previousFen: '', processedComments: [] };
+    return { previousFen: '', mainThread: -1, processedComments: [], moves: [], players: { white: '', black: '' } };
 };
 
-export const saveGameState = (issueNumber: number, state: { previousFen: string; processedComments: number[] }) => {
+export const saveGameState = (issueNumber: number, state: GameState) => {
     const stateFile = path.join(getIssueDirectory(issueNumber), 'game-state.yml');
     fs.writeFileSync(stateFile, yaml.dump(state));
 };

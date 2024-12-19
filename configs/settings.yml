@@ -290,7 +290,7 @@ comments:
     - "🌸 Blooming brilliance from {src} to {dest}! {nextTurn}, don't wilt under the pressure! 🌺🌟"
     - "🎺 Trumpet-worthy move from {src} to {dest}! {nextTurn}, can you keep the tune going? 🎺✨"
 
-  consecutive_turn:
+  invalid_turn:
     - "🚨 Hold up, {author}! You just played your turn. Are you trying to bend the rules or just overly eager? 😅 Let {nextTurn} take the stage—they deserve their spotlight! 🌟♟️"
     - "Whoa there, {author}! Chess is a duet, not a solo performance. 🎻 Let {nextTurn} step in for their turn! 🎯"
     - "Slow down, {author}! You've had your move—time to let {nextTurn} have their moment of glory! 🌟♟️"
