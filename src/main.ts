@@ -178,6 +178,8 @@ const createVisualFen = async (
     const imagePath = path.join(getIssueDirectory(issue.number), `${commentId}-board.png`);
     fs.writeFileSync(imagePath, canvas.toBuffer('image/png'));
 
+    console.log('Uploading board image to GitHub');
+
     const { owner, repo } = parseGitHubUrl(issue.url);
 
     const uri = `https://raw.githubusercontent.com/${owner}/${repo}/main/data/issue-${issue.number}/${commentId}-board.png`
@@ -202,6 +204,7 @@ const handleMoveAction = async (octokit: Octokit, commentId: Number, move: { fro
     }
     try {
         chess.move({ from: move.from, to: move.to, promotion: move.promotion as any });
+        console.log('Moving Piece:', move);
     } catch (error) {
         const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
         await octokit.rest.issues.createComment({
@@ -241,6 +244,17 @@ const handleMoveAction = async (octokit: Octokit, commentId: Number, move: { fro
         owner,
         repo,
         issue_number: issueNumber,
+        body: comments.next_move
+            .replace('{src}', move.from.toUpperCase())
+            .replace('{dest}', move.to.toUpperCase())
+            .replace('{nextTurn}', nextTurn) +
+            `\n\nCurrent board state:\n\n![Chess Board](${imageUri})`,
+    });
+
+    await octokit.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: issueNumber,
         body: comments.successful_move
             .replace('{src}', move.from.toUpperCase())
             .replace('{dest}', move.to.toUpperCase())
@@ -270,6 +284,14 @@ const handleNewGameAction = async (octokit: Octokit, issue: any, {comments}: any
         issue_number: issueNumber,
         body: comments.new_game + `\n\nInitial board state:\n\n![Chess Board](${imageUri})`,
     });
+
+    await octokit.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        body: comments.successful_new_game,
+    });
+
 
     saveGameState(issue.number, { previousFen: initialFen, processedComments: [] });
 };

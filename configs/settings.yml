@@ -23,9 +23,9 @@ comments:
     {src} to {dest}? Really? 😑 That's not a valid move!  
     Are you trying to invent a new chess rule or what? 😂 Try again.
 
-  successful_move: |
-    🏌️‍♂️ Move successful! {src} to {dest}. 👌  
-    Next up: {nextTurn}'s turn. Time to show who's boss! 💪♜
+  next_move: |
+    🎯 Nailed it! {src} to {dest} was a move so smooth, even the pieces are impressed. 🕺  
+    But now it's {nextTurn}'s turn... will they rise to the occasion or crumble under the pressure? Stay tuned for the plot twist! 🍿♟️
 
   checkmate: |
     🔥🔥🔥 BOOM! Checkmate! {winner} emerges victorious! 👑  
@@ -45,5 +45,9 @@ comments:
     🎲 The battle for the chess throne begins now! 👑  
     Time to summon the Chess Master (repo owner) and kickstart this epic duel. 🤺  
     No pressure, but the fate of the kingdom rests on this game! ⚔️🛡️
+
+  successful_move: |
+    🎩 Bravo! The move from {src} to {dest} was executed with the finesse of a grandmaster... or maybe a lucky roll of the dice. 🎲  
+    Either way, {nextTurn}'s turn now! Will it be brilliance or blunders next? Stay tuned for the drama! 🕵️‍♂️♟️
 
 # Reminder: Messing with these comments might result in unexpected hilarity. Proceed with caution! 😜

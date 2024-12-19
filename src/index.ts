@@ -11,6 +11,7 @@ const octokit = new Octokit({
 (async () => {
     try {
         const [owner, repo] = (process.env.GITHUB_REPOSITORY?.split('/') || []);
+        console.log(`Fetching issue: ${owner}/${repo}/#${process.env.ISSUE_NUMBER}`);
         const { data: issue } = await octokit.rest.issues.get({
             owner,
             repo,
