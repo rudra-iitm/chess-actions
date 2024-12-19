@@ -2,10 +2,10 @@
   "name": "chess-actions",
   "version": "1.0.0",
   "main": "main.js",
-  "types": "module",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm install && tsc -b",
+    "build": "tsc -b",
     "dev": "tsc -b && node dist/index.js"
   },
   "keywords": [],

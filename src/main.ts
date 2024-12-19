@@ -175,8 +175,12 @@ const createVisualFen = async (
         }
     }
 
+    const imagePath = path.join(getIssueDirectory(issue.number), `${commentId}-board.png`);
+    fs.writeFileSync(imagePath, canvas.toBuffer('image/png'));
+
     const { owner, repo } = parseGitHubUrl(issue.url);
-    const uri = await uploadBoardAsset(octokit, owner, repo, commentId, canvas.toBuffer('image/png'));
+
+    const uri = `https://raw.githubusercontent.com/${owner}/${repo}/main/data/issue-${issue.number}/${commentId}-board.png`
 
     return uri;
 };

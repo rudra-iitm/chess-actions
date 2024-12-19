@@ -10,10 +10,11 @@ const octokit = new Octokit({
 
 (async () => {
     try {
+        const [owner, repo] = (process.env.GITHUB_REPOSITORY?.split('/') || []);
         const { data: issue } = await octokit.rest.issues.get({
-            owner: process.env.GITHUB_REPOSITORY_OWNER || '',
-            repo: process.env.GITHUB_REPOSITORY || '',
-            issue_number: process.env.GITHUB_ISSUE_NUMBER ? parseInt(process.env.GITHUB_ISSUE_NUMBER) : 0,
+            owner,
+            repo,
+            issue_number: process.env.ISSUE_NUMBER ? parseInt(process.env.ISSUE_NUMBER) : 0,
         });
 
         await main(octokit, issue);

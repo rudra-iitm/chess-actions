@@ -1,0 +1,101 @@
+name: Play Chess
+description: 'Automate playing chess and updating move statistics in GitHub issues.'
+
+inputs:
+  token:
+    description: 'GitHub token.'
+    required: true
+  issue_number:
+    description: 'The GitHub issue number where the chess move is recorded.'
+    required: false
+    default: ${{ github.event.issue.number }}
+  repository_name:
+    description: 'Name of the GitHub repository.'
+    required: false
+    default: ${{ github.repository }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout chess-actions repository
+      uses: actions/checkout@v4
+      with:
+        repository: 'rudra-iitm/chess-actions'
+        ref: main
+        path: chess-actions
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.OS }}-node-
+
+    - name: Install dependencies
+      run: |
+        cd chess-actions
+        npm ci
+      shell: bash
+
+    - name: Build TypeScript
+      run: |
+        cd chess-actions
+        npm run build
+      shell: bash
+
+    - name: Process chess move
+      run: |
+        if [ -d "data" ]; then
+          cp -r data chess-actions/data || exit 1
+        fi
+        cd chess-actions
+        node dist/index.js
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        ISSUE_NUMBER: ${{ inputs.issue_number }}
+        GITHUB_REPOSITORY: ${{ inputs.repository_name }}
+      shell: bash
+
+    - name: Cleanup
+      run: |
+        if [ -d "chess-actions/data" ]; then
+          cp -r chess-actions/data . || exit 1
+        fi
+        rm -rf chess-actions
+      shell: bash
+
+    - name: Check for changes
+      run: |
+        ls
+        git add -A
+        git diff --cached --quiet || echo "::set-output name=changes_detected::1"
+        echo "::set-output name=changes_detected::0"
+      shell: bash
+      id: changes_check
+
+    - name: Debug Changes Detected
+      run: |
+        echo "Changes detected output: ${{ steps.changes_check.outputs.changes_detected }}"
+      shell: bash
+
+    - name: Commit files
+      if: steps.changes_check.outputs.changes_detected == '0'
+      run: |
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        commit_msg="Issue${{ inputs.issue_number }}-UpdatedMoveStats"
+        git commit -a -m "$commit_msg"
+      shell: bash
+
+    - name: Push changes
+      if: steps.changes_check.outputs.changes_detected == '0'
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ inputs.token }}
+        branch: ${{ github.ref }}
