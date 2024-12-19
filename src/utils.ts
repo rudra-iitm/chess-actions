@@ -36,7 +36,7 @@ export const loadGameState = (issueNumber: number): GameState => {
     if (fs.existsSync(stateFile)) {
         return yaml.load(fs.readFileSync(stateFile, 'utf8')) as any;
     }
-    return { previousFen: '', mainThread: -1, processedComments: [], moves: [], players: { white: '', black: '' } };
+    return { previousFen: '', mainThread: -1, processedComments: [], moves: [], players: { white: 'NotAssigned', black: 'NotAssigned' } };
 };
 
 export const saveGameState = (issueNumber: number, state: GameState) => {

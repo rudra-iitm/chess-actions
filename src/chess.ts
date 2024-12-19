@@ -5,8 +5,8 @@ import { createVisualFen, parseGitHubUrl, saveGameState, GameState  } from './ut
 export const handleMoveAction = async (octokit: Octokit, comment: any, move: { from: Square; to: Square; promotion?: string }, issue: any, {comments}: any, gameState: GameState) => {
     const chess = new Chess(gameState.previousFen);
     
-    if (gameState.players.black === '' && comment.user?.login !== gameState.players.white) {
-        gameState.players.black = comment.user?.login || '';
+    if (gameState.players.black === 'NotAssigned' && comment.user?.login !== gameState.players.white) {
+        gameState.players.black = comment.user?.login || 'black_player';
 
         const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
         await octokit.rest.issues.addAssignees({
@@ -25,7 +25,7 @@ export const handleMoveAction = async (octokit: Octokit, comment: any, move: { f
             owner,
             repo,
             issue_number: issueNumber,
-            body: invalid_turn_comment.replace('{author}', chess.turn() === 'w' ? `White (${gameState.players.white})` : `Black (${gameState.players.black})`),
+            body: invalid_turn_comment.replace('{author}', comment.user?.login).replace('{nextTurn}', chess.turn() === 'w' ? `White (@${gameState.players.white})` : `Black (@${gameState.players.black})`),
         });
         return gameState;
     }
@@ -100,17 +100,26 @@ export const handleMoveAction = async (octokit: Octokit, comment: any, move: { f
 
     const successful_move_comment = comments.successful_moves[Math.floor(Math.random() * comments.successful_moves.length)];
 
-    const previousMoves = gameState.moves.map(m => `${m.playedBy}: ${m.from.toUpperCase()} to ${m.to.toUpperCase()}`).join('\n');
+    const previousMoves = gameState.moves
+    .map(m => `- **${m.playedBy}**: ${m.from.toUpperCase()} → ${m.to.toUpperCase()}`)
+    .join('\n');
+
+    const body = `
+        ### Previous Moves
+        ${previousMoves || "_No moves have been made yet._"}
+
+        ${successful_move_comment
+            .replace('{src}', move.from.toUpperCase())
+            .replace('{dest}', move.to.toUpperCase())
+            .replace('{nextTurn}', nextTurn)}
+        `;
 
     await octokit.rest.issues.updateComment({
         owner,
         repo,
         issue_number: issueNumber,
         comment_id: gameState.mainThread,
-        body: previousMoves + successful_move_comment
-            .replace('{src}', move.from.toUpperCase())
-            .replace('{dest}', move.to.toUpperCase())
-            .replace('{nextTurn}', nextTurn)
+        body,
     });
 
     await octokit.rest.issues.deleteComment({
@@ -160,7 +169,7 @@ export const handleNewGameAction = async (octokit: Octokit, issue: any, { commen
         mainThread: commentId,
         processedComments: [],
         moves: [],
-        players: { white: issue.user?.login || 'white_player', black: '' },
+        players: { white: issue.user?.login || 'white_player', black: 'NotAssigned' },
     };
 
     saveGameState(issueNumber, gameState);
