@@ -104,7 +104,7 @@ export const handleMoveAction = async (octokit: Octokit, commentId: Number, move
             `\n\nCurrent board state:\n\n![Chess Board](${imageUri})`,
     });
 
-    const successful_move_comment = comments.successful_move[Math.floor(Math.random() * comments.successful_move.length)];
+    const successful_move_comment = comments.successful_moves[Math.floor(Math.random() * comments.successful_moves.length)];
     await octokit.rest.issues.createComment({
         owner,
         repo,
