@@ -19,6 +19,12 @@ export const handleMoveAction = async (octokit: Octokit, comment: any, move: { f
 
     if ((chess.turn() === 'w' && comment.user?.login !== gameState.players.white) || (chess.turn() === 'b' && comment.user?.login !== gameState.players.black)) {
         const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
+        await octokit.rest.issues.deleteComment({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            comment_id: comment.id,
+        });
 
         const invalid_turn_comment = comments.invalid_turn[Math.floor(Math.random() * comments.invalid_turn.length)];
         await octokit.rest.issues.createComment({
@@ -105,10 +111,10 @@ export const handleMoveAction = async (octokit: Octokit, comment: any, move: { f
     .join('\n');
 
     const body = `
-        ### Previous Moves
-        ${previousMoves || "_No moves have been made yet._"}
+### Previous Moves
+${previousMoves || "_No moves have been made yet._"}
 
-        ${successful_move_comment
+${successful_move_comment
             .replace('{src}', move.from.toUpperCase())
             .replace('{dest}', move.to.toUpperCase())
             .replace('{nextTurn}', nextTurn)}

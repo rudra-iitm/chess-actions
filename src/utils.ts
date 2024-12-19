@@ -88,6 +88,10 @@ export const createVisualFen = async (
 
     const squareSize = 50;
     const offset = 25;
+    const boardSize = 8 * squareSize;
+
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const isBlackTurn = fen.split(' ')[1] === 'b';
 
@@ -111,10 +115,10 @@ export const createVisualFen = async (
         const labelCol = isBlackTurn ? 104 - i : 97 + i;
 
         ctx.fillText(`${labelRow}`, 12, offset + i * squareSize + squareSize / 2);
-        ctx.fillText(`${labelRow}`, offset + 8 * squareSize + 12, offset + i * squareSize + squareSize / 2);
+        ctx.fillText(`${labelRow}`, offset + boardSize + 12, offset + i * squareSize + squareSize / 2);
 
         ctx.fillText(`${String.fromCharCode(labelCol)}`, offset + i * squareSize + squareSize / 2, 12);
-        ctx.fillText(`${String.fromCharCode(labelCol)}`, offset + i * squareSize + squareSize / 2, offset + 8 * squareSize + 12);
+        ctx.fillText(`${String.fromCharCode(labelCol)}`, offset + i * squareSize + squareSize / 2, offset + boardSize + 12);
     }
 
     const pieces: { [key: string]: string } = {
