@@ -1,12 +1,14 @@
 import { Octokit } from '@octokit/rest';
 import { Chess, Square } from 'chess.js';
-import { createVisualFen, parseGitHubUrl, saveGameState, GameState  } from './utils.js';
+import { createVisualFen, parseGitHubUrl, saveGameState, GameState, addLabel  } from './utils.js';
 
 export const handleMoveAction = async (octokit: Octokit, comment: any, move: { from: Square; to: Square; promotion?: string }, issue: any, {comments}: any, gameState: GameState) => {
     const chess = new Chess(gameState.previousFen);
     
     if (gameState.players.black === 'NotAssigned' && comment.user?.login !== gameState.players.white) {
         gameState.players.black = comment.user?.login || 'black_player';
+
+        addLabel(octokit, issue, { name: `Black-@${gameState.players.black}`, color: '484848', description: 'Black Player' });
 
         const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
         await octokit.rest.issues.addAssignees({
@@ -56,6 +58,13 @@ export const handleMoveAction = async (octokit: Octokit, comment: any, move: { f
         console.log('Moving Piece:', move);
     } catch (error) {
         const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
+        await octokit.rest.issues.deleteComment({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            comment_id: commentId,
+        });
+
         const invalid_move_comment = comments.invalid_move[Math.floor(Math.random() * comments.invalid_move.length)];
         await octokit.rest.issues.createComment({
             owner,
@@ -170,6 +179,8 @@ export const handleNewGameAction = async (octokit: Octokit, issue: any, { commen
         assignees: [issue.user?.login],
     });
 
+    addLabel(octokit, issue, { name: 'chess-game', color: '4d80e4', description: 'Chess Game Issue' });
+
     const gameState = {
         previousFen: initialFen,
         mainThread: commentId,
@@ -177,6 +188,8 @@ export const handleNewGameAction = async (octokit: Octokit, issue: any, { commen
         moves: [],
         players: { white: issue.user?.login || 'white_player', black: 'NotAssigned' },
     };
+
+    addLabel(octokit, issue, { name: `White-@${gameState.players.white}`, color: 'f0f0f0', description: 'White PLayer' });
 
     saveGameState(issueNumber, gameState);
 

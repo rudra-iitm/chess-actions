@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as yaml from 'js-yaml';
 import { Chess, Square } from 'chess.js';
 import { createCanvas } from 'canvas';
+import { Octokit } from '@octokit/rest';
 
 export enum Actions {
     Move = 'move',
@@ -164,3 +165,39 @@ export const createVisualFen = async (
 
     return uri;
 };
+
+export const addLabel = async (octokit: Octokit, issue: any, label: { name: string, color?: string, description?: string }) => {
+    try {
+      const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
+  
+      const existingLabels = await octokit.rest.issues.listLabelsOnIssue({
+        owner,
+        repo,
+        issue_number: issueNumber,
+      });
+  
+      const labelExists = existingLabels.data.some(existingLabel => existingLabel.name === label.name);
+  
+      if (!labelExists) {
+        await octokit.issues.createLabel({
+          owner,
+          repo,
+          name: label.name,
+          color: label.color,
+          description: label.description
+        });
+  
+        await octokit.issues.addLabels({
+          owner,
+          repo,
+          issue_number: issueNumber,
+          labels: [label.name]
+        });
+  
+      } else {
+        console.log('Label already exists:', label.name);
+      }
+    } catch (error) {
+      console.error('Error creating label:', error);
+    }
+  };
