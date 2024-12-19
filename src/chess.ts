@@ -1,6 +1,6 @@
 import { Octokit } from '@octokit/rest';
 import { Chess, Square } from 'chess.js';
-import { createVisualFen, parseGitHubUrl, saveGameState, GameState, addLabel  } from './utils.js';
+import { createVisualFen, parseGitHubUrl, saveGameState, GameState, addLabel, removeLabel  } from './utils.js';
 
 export const handleMoveAction = async (octokit: Octokit, comment: any, move: { from: Square; to: Square; promotion?: string }, issue: any, {comments}: any, gameState: GameState) => {
     const chess = new Chess(gameState.previousFen);
@@ -92,6 +92,16 @@ export const handleMoveAction = async (octokit: Octokit, comment: any, move: { f
             body: resultMessage + `\n\nFinal board state:\n\n![Chess Board](${imageUri})`,
             state: 'closed',
         });
+
+        if (chess.isCheckmate()) {
+            const winner = chess.turn() === 'w' ? gameState.players.black : gameState.players.white;
+            addLabel(octokit, issue, { name: `👑-@${winner}`, color: '6ba8a9', description: 'Checkmate' });
+        } else {
+            addLabel(octokit, issue, { name: '½–½ draw', color: 'eb4d55', description: 'Draw' });
+        }
+
+        await removeLabel(octokit, issue, 'White-@' + gameState.players.white);
+        await removeLabel(octokit, issue, 'Black-@' + gameState.players.black);
 
         gameState.previousFen = currentFen;
         gameState.moves.push({ from: move.from, to: move.to, playedBy: comment.user?.login });

@@ -170,10 +170,9 @@ export const addLabel = async (octokit: Octokit, issue: any, label: { name: stri
     try {
       const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
   
-      const existingLabels = await octokit.rest.issues.listLabelsOnIssue({
+      const existingLabels = await octokit.rest.issues.listLabelsForRepo({
         owner,
         repo,
-        issue_number: issueNumber,
       });
   
       const labelExists = existingLabels.data.some(existingLabel => existingLabel.name === label.name);
@@ -186,18 +185,28 @@ export const addLabel = async (octokit: Octokit, issue: any, label: { name: stri
           color: label.color,
           description: label.description
         });
-  
-        await octokit.issues.addLabels({
-          owner,
-          repo,
-          issue_number: issueNumber,
-          labels: [label.name]
-        });
-  
-      } else {
-        console.log('Label already exists:', label.name);
       }
+      await octokit.issues.addLabels({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        labels: [label.name]
+      });
     } catch (error) {
       console.error('Error creating label:', error);
     }
   };
+
+export const removeLabel = async (octokit: Octokit, issue: any, label: string) => {
+    try {
+        const { owner, repo } = parseGitHubUrl(issue.url);
+
+        await octokit.issues.deleteLabel({
+            owner,
+            repo,
+            name: label,
+        });
+    } catch (error) {
+        console.error('Error removing label:', error);
+    }
+}
