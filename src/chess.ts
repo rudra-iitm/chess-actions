@@ -84,7 +84,6 @@ export const handleMoveAction = async (octokit: Octokit, commentId: Number, move
             body: resultMessage,
         });
 
-        saveGameState(issue.number, { previousFen: chess.fen(), processedComments: gameState.processedComments });
         return chess.fen();
     }
 
@@ -116,7 +115,6 @@ export const handleMoveAction = async (octokit: Octokit, commentId: Number, move
             .replace('{nextTurn}', nextTurn)
     });
 
-    saveGameState(issue.number, { previousFen: currentFen, processedComments: gameState.processedComments });
     return chess.fen();
 };
 
@@ -135,7 +133,6 @@ export const handleNewGameAction = async (octokit: Octokit, issue: any, {comment
         body: new_game_comment + `\n\nInitial board state:\n\n![Chess Board](${imageUri})`,
     });
 
-
     const successful_new_game_comment = comments.successful_new_game[Math.floor(Math.random() * comments.successful_new_game.length)];
     await octokit.rest.issues.createComment({
         owner,
@@ -145,4 +142,6 @@ export const handleNewGameAction = async (octokit: Octokit, issue: any, {comment
     });
 
     saveGameState(issue.number, { previousFen: initialFen, processedComments: [] });
+
+    return chess.fen();
 };

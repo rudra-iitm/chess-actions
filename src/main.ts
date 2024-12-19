@@ -16,11 +16,6 @@ const processComments = async (octokit: Octokit, issue: any) => {
     for (const comment of comments) {
         if (gameState.processedComments.includes(comment.id)) continue;
 
-        if (comment.user?.login === 'github-actions[bot]') {
-            gameState.processedComments.push(comment.id);
-            continue;
-        }
-
         console.log('Processing comment:', comment.id);
 
         const { action, move } = parseComment(comment);
