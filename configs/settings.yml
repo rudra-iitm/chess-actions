@@ -50,4 +50,8 @@ comments:
     🎩 Bravo! The move from {src} to {dest} was executed with the finesse of a grandmaster... or maybe a lucky roll of the dice. 🎲  
     Either way, {nextTurn}'s turn now! Will it be brilliance or blunders next? Stay tuned for the drama! 🕵️‍♂️♟️
 
+  consecutive_turn: |
+    🚨 Hold up, {author}! You just played your turn. Are you trying to break the rules or just really excited? 😅  
+    Chess isn't a solo dance, it's a duel! Let {nextTurn} have their moment to shine. 🌟♟️
+
 # Reminder: Messing with these comments might result in unexpected hilarity. Proceed with caution! 😜

@@ -83,7 +83,7 @@ runs:
       run: |
         git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        commit_msg="Issue${{ inputs.issue_number }}-UpdatedMoveStats"
+        commit_msg="Game-Issue#${{ inputs.issue_number }}-UpdatedGameStats"
         git commit -a -m "$commit_msg"
       shell: bash
 

@@ -110,10 +110,9 @@ const uploadBoardAsset = async (
 };
 
 const createVisualFen = async (
-    octokit: Octokit,
     issue: any,
     fen: string,
-    commentId: Number
+    commentId: Number | String,
 ): Promise<string> => {
     const canvas = createCanvas(450, 450);
     const ctx = canvas.getContext('2d');
@@ -175,14 +174,21 @@ const createVisualFen = async (
         }
     }
 
-    const imagePath = path.join(getIssueDirectory(issue.number), `${commentId}-board.png`);
+    const board_dir = path.join(getIssueDirectory(issue.number), 'boards');
+
+    if (!fs.existsSync(board_dir)) {
+        fs.mkdirSync(board_dir, { recursive: true });
+    }
+
+    const imagePath = path.join(board_dir, `${commentId}-board.png`);
+
     fs.writeFileSync(imagePath, canvas.toBuffer('image/png'));
 
     console.log('Uploading board image to GitHub');
 
     const { owner, repo } = parseGitHubUrl(issue.url);
 
-    const uri = `https://raw.githubusercontent.com/${owner}/${repo}/main/data/issue-${issue.number}/${commentId}-board.png`
+    const uri = `https://raw.githubusercontent.com/${owner}/${repo}/main/data/issue-${issue.number}/boards/${commentId}-board.png`
 
     return uri;
 };
@@ -235,7 +241,7 @@ const handleMoveAction = async (octokit: Octokit, commentId: Number, move: { fro
 
     const currentFen = chess.fen();
     const nextTurn = chess.turn() === 'w' ? 'White' : 'Black';
-    const imageUri = await createVisualFen(octokit, issue, currentFen, commentId);
+    const imageUri = await createVisualFen(issue, currentFen, commentId);
 
     const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
     await octokit.rest.issues.update({
@@ -271,7 +277,7 @@ const handleNewGameAction = async (octokit: Octokit, issue: any, {comments}: any
     console.log('Creating new game for issue:', issue.number);
     const chess = new Chess();
     const initialFen = chess.fen();
-    const imageUri = await createVisualFen(octokit, issue, initialFen, issue.number);
+    const imageUri = await createVisualFen(issue, initialFen, 'init');
 
     const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
     await octokit.rest.issues.update({
