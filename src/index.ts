@@ -1,6 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { config } from "dotenv";
 import { main } from "./main.js";
+import { handleIssueClosed, loadGlobalData, saveGlobalData } from "./utils.js";
 
 config();
 
@@ -17,6 +18,12 @@ const octokit = new Octokit({
             repo,
             issue_number: process.env.ISSUE_NUMBER ? parseInt(process.env.ISSUE_NUMBER) : 0,
         });
+
+        if (issue.state === 'closed') {
+            console.log('Issue is closed, handling...');
+            handleIssueClosed(octokit, issue);
+            return;
+        }
 
         await main(octokit, issue);
     } catch (error) {

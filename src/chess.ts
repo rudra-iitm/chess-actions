@@ -1,16 +1,34 @@
 import { Octokit } from '@octokit/rest';
 import { Chess, Square } from 'chess.js';
-import { createVisualFen, parseGitHubUrl, saveGameState, GameState, addLabel, removeLabel  } from './utils.js';
+import { createVisualFen, parseGitHubUrl, saveGameState, GameState, addLabel, removeLabel, loadGlobalData, saveGlobalData  } from './utils.js';
 
 export const handleMoveAction = async (octokit: Octokit, comment: any, move: { from: Square; to: Square; promotion?: string }, issue: any, {comments}: any, gameState: GameState) => {
     const chess = new Chess(gameState.previousFen);
     
     if (gameState.players.black === 'NotAssigned' && comment.user?.login !== gameState.players.white) {
+        const {activeGames} = loadGlobalData();
+        const player = comment.user?.login;
+        const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
+
+        if (activeGames[player] && activeGames[player].length >= 5 && player !=owner) {
+            const invalid_new_game_comment = comments.invalid_new_game_max?.[Math.floor(Math.random() * comments.invalid_new_game_max.length)] || "You have reached the maximum number of games!";
+            await octokit.rest.issues.createComment({
+                owner: issue.user?.login,
+                repo: issue.repo?.name,
+                issue_number: issue.number,
+                body: invalid_new_game_comment.replace('{author}', player).replace('{activeGames}', activeGames[player].join(', ')),
+            });
+
+            return gameState;
+        }
+
         gameState.players.black = comment.user?.login || 'black_player';
+        activeGames[player].push(issueNumber.toString());
+
+        saveGlobalData({activeGames});
 
         addLabel(octokit, issue, { name: `Black-@${gameState.players.black}`, color: '484848', description: 'Black Player' });
 
-        const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
         await octokit.rest.issues.addAssignees({
             owner,
             repo,
@@ -158,13 +176,36 @@ ${successful_move_comment
 };
 
 export const handleNewGameAction = async (octokit: Octokit, issue: any, { comments }: any) => {
+    const globalData = loadGlobalData();
+
+    const player = issue.user?.login;
+    const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
+
+    if (globalData.activeGames[player] && globalData.activeGames[player].length >= 5 && player != owner) {
+        const invalid_new_game_comment = comments.invalid_new_game_max?.[Math.floor(Math.random() * comments.invalid_new_game_max.length)] || "You have reached the maximum number of games!";
+        await octokit.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            body: invalid_new_game_comment.replace('{author}', player).replace('{activeGames}', globalData.activeGames[player].join(', ')),
+        });
+
+        await octokit.rest.issues.update({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            body: 'Game not started due to maximum number of games reached.',
+            state: 'closed',
+        });
+
+        return null;
+    }
+
     console.log('Creating new game for issue:', issue.number);
     
     const chess = new Chess();
     const initialFen = chess.fen();
     const imageUri = await createVisualFen(issue, initialFen, 'init');
-
-    const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
 
     const new_game_comment = comments.new_game?.[Math.floor(Math.random() * comments.new_game.length)] || "Starting a new game!";
     await octokit.rest.issues.update({
@@ -173,6 +214,12 @@ export const handleNewGameAction = async (octokit: Octokit, issue: any, { commen
         issue_number: issueNumber,
         body: `${new_game_comment}\n\nInitial board state:\n\n![Chess Board](${imageUri})`,
     });
+
+    if (!globalData.activeGames[player]) {
+        globalData.activeGames[player] = [];
+    }
+
+    globalData.activeGames[player].push(issueNumber.toString());
 
     const successful_new_game_comment = comments.successful_new_game?.[Math.floor(Math.random() * comments.successful_new_game.length)] || "Game initialized successfully!";
     const { data: { id: commentId } } = await octokit.rest.issues.createComment({
@@ -202,6 +249,7 @@ export const handleNewGameAction = async (octokit: Octokit, issue: any, { commen
     addLabel(octokit, issue, { name: `White-@${gameState.players.white}`, color: 'f0f0f0', description: 'White PLayer' });
 
     saveGameState(issueNumber, gameState);
+    saveGlobalData(globalData);
 
     return gameState;
 };

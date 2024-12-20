@@ -20,6 +20,29 @@ export interface GameState {
 
 const CONFIG_FILE = 'configs/settings.yml';
 
+export const loadGlobalData = (): { activeGames: Record<string, string[]> } => {
+    const dir = path.join(process.cwd(), 'data');
+
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+
+    const globalDataFile = path.join(dir, 'global-state.yml');
+
+    if (fs.existsSync(globalDataFile)) {
+        return yaml.load(fs.readFileSync(globalDataFile, 'utf8')) as any;
+    }
+
+    return { activeGames: {} };
+};
+
+export const saveGlobalData = (data: any) => {
+    const dir = path.join(process.cwd(), 'data');
+    const globalData = path.join(dir, 'global-state.yml');
+    fs.writeFileSync(globalData, yaml.dump(data));
+
+};
+
 export const getIssueDirectory = (issueNumber: number): string => {
     const dir = path.join(process.cwd(), 'data', `issue-${issueNumber}`);
     if (!fs.existsSync(dir)) {
@@ -210,3 +233,31 @@ export const removeLabel = async (octokit: Octokit, issue: any, label: string) =
         console.error('Error removing label:', error);
     }
 }
+
+export const handleIssueClosed = (octokit: Octokit, issue: any) => {
+    const { activeGames } = loadGlobalData();
+    const { issueNumber } = parseGitHubUrl(issue.url);
+
+    console.log(activeGames);
+
+    if (!activeGames || typeof activeGames !== 'object') {
+        console.error("Global data is missing or 'activeGames' is invalid.");
+        return;
+    }
+
+    for (const player in activeGames) {
+        const games = activeGames[player];
+            const gameIndex = games.indexOf(issueNumber.toString());
+            if (gameIndex !== -1) {
+                games.splice(gameIndex, 1);
+                console.log(`Removed issue #${issueNumber} from active games of player ${player}`);
+            activeGames[player] = games;
+        } else {
+            console.warn(`activeGames[${player}] is not an array, skipping.`);
+        }
+    }
+
+    console.log('After Handling', activeGames);
+
+    saveGlobalData({ activeGames });
+};
