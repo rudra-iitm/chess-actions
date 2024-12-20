@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { config } from "dotenv";
 import { main } from "./main.js";
-import { handleIssueClosed, loadGlobalData, saveGlobalData } from "./utils.js";
+import { handleIssueClosed } from "./utils.js";
 
 config();
 

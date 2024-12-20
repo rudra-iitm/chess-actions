@@ -8,6 +8,9 @@ import { Octokit } from '@octokit/rest';
 export enum Actions {
     Move = 'move',
     Invalid = 'invalid',
+    OfferDraw = 'offer_draw',
+    AcceptDraw = 'accept_draw',
+    Resign = 'resign',
 }
 
 export interface GameState {
@@ -16,6 +19,7 @@ export interface GameState {
     processedComments: number[],
     moves: { from: Square, to: Square, playedBy: string, promotion?: string  }[],
     players: { white: string, black: string },
+    drawOfferedBy?: string,
 }
 
 const CONFIG_FILE = 'configs/settings.yml';
@@ -70,8 +74,14 @@ export const saveGameState = (issueNumber: number, state: GameState) => {
 
 export const parseComment = (comment: any): { action: Actions; move?: { from: Square; to: Square; promotion?: string } } => {
     const { body } = comment;
-
-    if (body.toLowerCase().startsWith('chess: move')) {
+    
+    if (body.toLowerCase() === 'chess: offer draw') {
+        return { action: Actions.OfferDraw };
+    } else if (body.toLowerCase() === 'chess: resign') {
+        return { action: Actions.Resign };
+    } else if (body.toLowerCase() === 'chess: accept draw') {
+        return { action: Actions.AcceptDraw };
+    } else if (body.toLowerCase().startsWith('chess: move')) {
         const regex = /Chess: Move ([A-H][1-8]) to ([A-H][1-8])(?: promote to ([qrbn]))?/i;
         const matchObj = regex.exec(body);
 

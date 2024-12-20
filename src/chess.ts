@@ -4,6 +4,7 @@ import { createVisualFen, parseGitHubUrl, saveGameState, GameState, addLabel, re
 
 export const handleMoveAction = async (octokit: Octokit, comment: any, move: { from: Square; to: Square; promotion?: string }, issue: any, {comments}: any, gameState: GameState) => {
     const chess = new Chess(gameState.previousFen);
+    gameState.drawOfferedBy = undefined;
     
     if (gameState.players.black === 'NotAssigned' && comment.user?.login !== gameState.players.white) {
         const {activeGames} = loadGlobalData();
@@ -253,3 +254,120 @@ export const handleNewGameAction = async (octokit: Octokit, issue: any, { commen
 
     return gameState;
 };
+
+export const handleOfferDrawAction = async (octokit: Octokit, comment: any, issue: any, gameState: GameState) => {
+    const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
+
+    const player = comment.user?.login;
+
+    const draw_offer = "{offeredBy} has offered a draw! 🤝 {offeredTo} Accept (Comment:- `Chess: Accept Draw`), decline, or counter with your own terms (Just Play Next Move). 🤔"
+
+    const draw_offer_comment = gameState.players.white === player
+        ? draw_offer.replace('{offeredBy}', `White (@${player})`).replace('{offeredTo}', `Black (@${gameState.players.black})`)
+        : draw_offer.replace('{offeredBy}', `Black (@${player})`).replace('{offeredTo}', `White (@${gameState.players.white})`);
+
+    await octokit.rest.issues.deleteComment({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        comment_id: comment.id,
+    });
+
+    await octokit.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        body: draw_offer_comment,
+    });
+
+    gameState.drawOfferedBy = player;
+
+    return gameState;
+}
+
+export const handleAcceptDrawAction = async (octokit: Octokit, comment: any, issue: any, gameState: GameState) => {
+    const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
+
+    const player = comment.user?.login;
+
+    octokit.rest.issues.deleteComment({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        comment_id: comment.id,
+    });
+
+    if (!gameState.drawOfferedBy) {
+        const invalid_draw_comment = "{author} Hold your horses! No draw offer has been made yet!";
+        await octokit.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            body: invalid_draw_comment.replace('{author}', `@${player}`),
+        });
+
+        return gameState;
+    } else if (gameState.drawOfferedBy === player) {
+        const invalid_draw_comment = "{author} Nice try, but you can't accept your own draw offer! Nice try though... 😂";
+        await octokit.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            body: invalid_draw_comment.replace('{author}', `@${player}`),
+        });
+
+        return gameState;
+    }
+
+    const draw_accepted_comment = "{acceptedBy} has accepted the draw offer from {offeredBy}! 🤝 The game is a draw! 🎉";
+
+    const draw_accepted = gameState.players.white === player
+        ? draw_accepted_comment.replace('{acceptedBy}', `White (@${player})`).replace('{offeredBy}', `Black (@${gameState.players.black})`)
+        : draw_accepted_comment.replace('{acceptedBy}', `Black (@${player})`).replace('{offeredBy}', `White (@${gameState.players.white})`);
+
+    await octokit.rest.issues.update({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        body: draw_accepted,
+        state: 'closed',
+    });
+
+    addLabel(octokit, issue, { name: '½–½ draw', color: 'eb4d55', description: 'Draw' });
+
+    await removeLabel(octokit, issue, 'White-@' + gameState.players.white);
+    await removeLabel(octokit, issue, 'Black-@' + gameState.players.black);
+
+    gameState.drawOfferedBy = undefined;
+
+    return gameState;
+}
+
+export const handleResignAction = async (octokit: Octokit, comment: any, issue: any, gameState: GameState) => {
+    const { owner, repo, issueNumber } = parseGitHubUrl(issue.url);
+
+    const player = comment.user?.login;
+
+    const resign_comment = "{resignedBy} has resigned the game! 😔 {winner} wins by resignation! 🎉";
+
+    const resign = gameState.players.white === player
+        ? resign_comment.replace('{resignedBy}', `White (@${player})`).replace('{winner}', `Black (@${gameState.players.black})`)
+        : resign_comment.replace('{resignedBy}', `Black (@${player})`).replace('{winner}', `White (@${gameState.players.white})`);
+
+    await octokit.rest.issues.update({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        body: resign,
+        state: 'closed',
+    });
+
+    addLabel(octokit, issue, { name: `👑-@${gameState.players.black}`, color: '6ba8a9', description: 'Checkmate' });
+
+    await removeLabel(octokit, issue, 'White-@' + gameState.players.white);
+    await removeLabel(octokit, issue, 'Black-@' + gameState.players.black);
+
+    gameState.drawOfferedBy = undefined;
+
+    return gameState;
+}
